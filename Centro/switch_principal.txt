@@ -1,0 +1,52 @@
+enable
+configure terminal
+hostname Switch1
+
+! Configurar VTP Cliente 
+vtp domain centro
+vtp mode client
+vtp password cisco
+
+! Configurar el Enlace Troncal 
+
+interface FastEthernet0/4
+ description Link_Hacia_MultilayerSwitch
+ switchport mode trunk
+ ip dhcp snooping trust
+ no shutdown
+ exit
+
+! Configurar Staff IT (VLAN 33)
+interface FastEthernet0/2
+ description PC_Staff_IT
+ switchport mode access
+ switchport access vlan 33
+ ! Seguridad de Puerto (Port Security)
+ switchport port-security
+ switchport port-security maximum 2
+ switchport port-security violation restrict
+ switchport port-security mac-address sticky
+ spanning-tree portfast
+ no shutdown
+ exit
+
+
+interface range FastEthernet0/5 - 24
+ switchport mode access
+ switchport access vlan 36
+ ! Seguridad de Puerto
+ switchport port-security
+ switchport port-security maximum 2
+ switchport port-security violation restrict
+ switchport port-security mac-address sticky
+ spanning-tree portfast
+ exit
+
+
+ip dhcp snooping
+ip dhcp snooping vlan 33,34,35,36,37
+
+no ip dhcp snooping information option
+
+end
+write
