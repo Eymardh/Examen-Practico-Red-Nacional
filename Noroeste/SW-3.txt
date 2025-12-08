@@ -1,0 +1,133 @@
+SW-3
+
+
+enable
+configure terminal
+
+hostname SW-3
+no ip domain-lookup
+enable secret cisco123
+banner motd #Acceso Autorizado - SW-3 VTP Server Region NW#
+
+! --- CONFIGURACIÓN DE VLANs ---
+vlan 5
+ name Mkt
+vlan 6
+ name Ventas
+vlan 7
+ name Compras
+vlan 9
+ name Gestion_TI
+exit
+
+! --- VTP SERVER ---
+vtp mode server
+vtp domain JuanMark
+vtp password juanmark123
+vtp version 2
+
+! --- INTERFAZ DE ADMINISTRACIÓN ---
+interface vlan 9
+ description Management VLAN
+ ip address 148.60.9.5 255.255.255.0
+ no shutdown
+exit
+
+ip default-gateway 148.60.9.1
+
+! --- SSH ---
+ip domain-name juanmark.com
+crypto key generate rsa general-keys modulus 1024
+ip ssh version 2
+username admin privilege 15 secret Admin123!
+
+line vty 0 15
+ transport input ssh
+ login local
+exit
+
+line console 0
+ password console123
+ login
+ logging synchronous
+ exec-timeout 5 0
+exit
+
+! --- TRUNK HACIA SW-2 ---
+interface fastEthernet 0/22
+ description Trunk hacia SW-2
+ switchport mode trunk
+ switchport trunk native vlan 99
+ switchport trunk allowed vlan 5,6,7,9
+ switchport nonegotiate
+ no shutdown
+exit
+
+! --- TRUNK HACIA SW-4 ---
+interface fastEthernet 0/21
+ description Trunk hacia SW-4
+ switchport mode trunk
+ switchport trunk native vlan 99
+ switchport trunk allowed vlan 5,6,7,9
+ switchport nonegotiate
+ no shutdown
+exit
+
+! --- PUERTOS DE ACCESO VLAN 9 Gestion TI ---
+interface range fastEthernet 0/1-5
+ description VLAN 9 - Gestion TI
+ switchport mode access
+ switchport access vlan 9
+ switchport port-security
+ switchport port-security maximum 2
+ switchport port-security violation restrict
+ switchport port-security mac-address sticky
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+ no shutdown
+exit
+
+! --- PUERTOS DE ACCESO VLAN 5 Marketing ---
+interface range fastEthernet 0/6-10
+ description VLAN 5 - Marketing
+ switchport mode access
+ switchport access vlan 5
+ switchport port-security
+ switchport port-security maximum 2
+ switchport port-security violation restrict
+ switchport port-security mac-address sticky
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+ no shutdown
+exit
+
+! --- PUERTOS DE ACCESO VLAN 6 Ventas ---
+interface range fastEthernet 0/11-15
+ description VLAN 6 - Ventas
+ switchport mode access
+ switchport access vlan 6
+ switchport port-security
+ switchport port-security maximum 2
+ switchport port-security violation restrict
+ switchport port-security mac-address sticky
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+ no shutdown
+exit
+
+! --- PUERTOS DE ACCESO VLAN 7 Compras ---
+interface range fastEthernet 0/16-20
+ description VLAN 7 - Compras
+ switchport mode access
+ switchport access vlan 7
+ switchport port-security
+ switchport port-security maximum 2
+ switchport port-security violation restrict
+ switchport port-security mac-address sticky
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+ no shutdown
+exit
+
+! --- STP ROOT PRIMARIO ---
+spanning-tree vlan 5,6,7,9 priority 4096

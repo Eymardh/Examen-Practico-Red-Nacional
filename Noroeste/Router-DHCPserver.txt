@@ -1,0 +1,205 @@
+! --- Router - VTP server ---
+
+
+enable
+configure terminal
+
+! --- CONFIGURACIÓN BÁSICA ---
+no ip domain-lookup
+enable secret cisco123
+banner motd #Acceso Autorizado Unicamente - Router-NW Región Noroeste#
+
+! --- HABILITAR IPv6 ---
+ipv6 unicast-routing
+
+! --- CONFIGURACIÓN SSH ---
+ip domain-name juanmark.com
+crypto key generate rsa general-keys modulus 2048
+ip ssh version 2
+
+username admin privilege 15 secret Admin123!
+line vty 0 4
+ transport input ssh
+ login local
+exit
+
+line console 0
+ password console123
+ login
+ logging synchronous
+ exec-timeout 5 0
+exit
+
+! --- ROUTER ON A STICK ---
+
+interface gigabitEthernet 0/0
+ description Trunk hacia SW-2
+ no ip address
+ no shutdown
+exit
+
+! --- SUBINTERFAZ VLAN 5 - Marketing ---
+interface gigabitEthernet 0/0.5
+ description VLAN 5 - Mkt
+ encapsulation dot1Q 5
+ ip address 148.60.5.1 255.255.255.0
+ ipv6 address 2006:AFEA:B0CA:5::1/64
+ ipv6 enable
+ no shutdown
+exit
+
+! --- SUBINTERFAZ VLAN 6 - Ventas ---
+interface gigabitEthernet 0/0.6
+ description VLAN 6 - Ventas
+ encapsulation dot1Q 6
+ ip address 148.60.6.1 255.255.255.0
+ ipv6 address 2006:AFEA:B0CA:6::1/64
+ ipv6 enable
+ no shutdown
+exit
+
+! --- SUBINTERFAZ VLAN 7 - Compras ---
+interface gigabitEthernet 0/0.7
+ description VLAN 7 - Compras
+ encapsulation dot1Q 7
+ ip address 148.60.7.1 255.255.255.0
+ ipv6 address 2006:AFEA:B0CA:7::1/64
+ ipv6 enable
+ no shutdown
+exit
+
+! --- SUBINTERFAZ VLAN 9 - Gestión TI ---
+interface gigabitEthernet 0/0.9
+ description VLAN 9 - Gestion TI
+ encapsulation dot1Q 9
+ ip address 148.60.9.1 255.255.255.0
+ ipv6 address 2006:AFEA:B0CA:9::1/64
+ ipv6 enable
+ no shutdown
+exit
+
+! ------------
+! WIP
+! ------------
+
+! --- ENLACE HACIA REGIÓN CENTRO ---
+interface gigabitEthernet 0/1
+ description Enlace WAN hacia Centro
+ ip address 148.60.100.1 255.255.255.252
+ bandwidth 1024
+ no shutdown
+exit
+
+! --- ENLACE HACIA REGIÓN NORESTE ---
+interface serial 0/0/0
+ description Enlace WAN hacia Noreste
+ ip address 148.60.100.5 255.255.255.252
+ bandwidth 512
+ clock rate 64000
+ no shutdown
+exit
+
+
+! --- DHCPIPv4
+
+ip dhcp excluded-address 148.60.5.1 148.60.5.9
+ip dhcp excluded-address 148.60.6.1 148.60.6.9
+ip dhcp excluded-address 148.60.7.1 148.60.7.9
+ip dhcp excluded-address 148.60.9.1 148.60.9.9
+
+! --- POOL DHCP VLAN 5 - Marketing ---
+ip dhcp pool VLAN5-Marketing
+ network 148.60.5.0 255.255.255.0
+ default-router 148.60.5.1
+ domain-name juanmark.com
+exit
+
+! --- POOL DHCP VLAN 6 - Ventas ---
+ip dhcp pool VLAN6-Ventas
+ network 148.60.6.0 255.255.255.0
+ default-router 148.60.6.1
+ domain-name juanmark.com
+exit
+
+! --- POOL DHCP VLAN 7 - Compras ---
+ip dhcp pool VLAN7-Compras
+ network 148.60.7.0 255.255.255.0
+ default-router 148.60.7.1
+ domain-name juanmark.com
+exit
+
+! --- POOL DHCP VLAN 9 - Gestión TI ---
+ip dhcp pool VLAN9-GestionTI
+ network 148.60.9.0 255.255.255.0
+ default-router 148.60.9.1
+ domain-name juanmark.com
+exit
+
+! --- DHCPIPv6
+
+! --- DHCPv6 VLAN 5 - Marketing ---
+ipv6 dhcp pool DHCPv6-VLAN5
+ dns-server 2001:4860:4860::8888
+ domain-name juanmark.com
+exit
+
+interface gigabitEthernet 0/0.5
+ ipv6 nd other-config-flag
+ ipv6 dhcp server DHCPv6-VLAN5
+exit
+
+! --- DHCPv6 VLAN 6 - Ventas ---
+ipv6 dhcp pool DHCPv6-VLAN6
+ dns-server 2001:4860:4860::8888
+ domain-name juanmark.com
+exit
+
+interface gigabitEthernet 0/0.6
+ ipv6 nd other-config-flag
+ ipv6 dhcp server DHCPv6-VLAN6
+exit
+
+! --- DHCPv6 VLAN 7 - Compras ---
+ipv6 dhcp pool DHCPv6-VLAN7
+ dns-server 2001:4860:4860::8888
+ domain-name juanmark.com
+exit
+
+interface gigabitEthernet 0/0.7
+ ipv6 nd other-config-flag
+ ipv6 dhcp server DHCPv6-VLAN7
+exit
+
+! --- DHCPv6 VLAN 9 - Gestión TI ---
+ipv6 dhcp pool DHCPv6-VLAN9
+ dns-server 2001:4860:4860::8888
+ domain-name juanmark.com
+exit
+
+interface gigabitEthernet 0/0.9
+ ipv6 nd other-config-flag
+ ipv6 dhcp server DHCPv6-VLAN9
+exit
+
+! --- RIP ---
+
+router rip
+ version 2
+ no auto-summary
+ 
+ ! Redes locales
+ network 148.60.5.0
+ network 148.60.6.0
+ network 148.60.7.0
+ network 148.60.9.0
+ 
+ ! Enlaces WAN
+ network 148.60.100.0
+ 
+ ! Deshabilitar RIP en interfaces donde no sea necesario
+ passive-interface gigabitEthernet 0/0.5
+ passive-interface gigabitEthernet 0/0.6
+ passive-interface gigabitEthernet 0/0.7
+ passive-interface gigabitEthernet 0/0.9
+exit
+
