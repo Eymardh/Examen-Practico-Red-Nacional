@@ -1,0 +1,119 @@
+Multicapa Switch 5 -VTP Client
+
+ 
+enable
+configure terminal
+hostname MLS5
+ip domain-name juanmark.com
+no ip domain-lookup
+
+username admin secret Admin123!
+
+crypto key generate rsa general-keys modulus 2048
+line vty 0 15
+login local
+transport input ssh
+exit
+
+ip routing
+
+vtp mode client
+vtp domain JUANMARK
+vtp password Cisco123!
+
+---- Configurar STP
+spanning-tree mode pvst
+spanning-tree vlan 65 priority 8192
+spanning-tree vlan 66 priority 8192
+spanning-tree vlan 67 priority 8192
+spanning-tree vlan 68 priority 8192
+spanning-tree vlan 99 priority 8192
+
+--- Configuración EtherChannel 3: MLS5 - MLS0
+interface range GigabitEthernet1/0/6-7
+description EtherChannel 3 to MLS0
+switchport mode trunk
+switchport trunk allowed vlan 65,66,67,68,99
+switchport nonegotiate
+channel-group 3 mode desirable
+no shutdown
+exit
+
+--- Configuración EtherChannel 5: MLS5 - MLS1
+interface range GigabitEthernet1/0/8-9
+description EtherChannel 5 to MLS1
+switchport mode trunk
+switchport trunk allowed vlan 65,66,67,68,99
+switchport nonegotiate
+channel-group 5 mode desirable
+no shutdown
+exit
+
+--- Configuración EtherChannel 7: MLS5 - MLS4
+interface range GigabitEthernet1/0/14-15
+description EtherChannel 7 to MLS4
+switchport mode trunk
+switchport trunk allowed vlan 65,66,67,68,99
+switchport nonegotiate
+channel-group 7 mode desirable
+no shutdown
+exit
+
+
+--- Trunk a Switch de Acceso 2
+interface GigabitEthernet1/0/2
+description Trunk Switch 2
+switchport mode trunk
+switchport trunk allowed vlan 65,66,67,68,99
+switchport nonegotiate
+no shutdown
+exit
+
+--- Trunk a Switch de Acceso 3
+interface GigabitEthernet1/0/20
+description Trunk Switch 3
+switchport mode trunk
+switchport trunk allowed vlan 65,66,67,68,99
+switchport nonegotiate
+no shutdown
+exit
+
+--- Interface VLAN 99 para administrar
+interface vlan 99
+description administrar Interface
+ip address 148.60.99.15 255.255.255.224
+no shutdown
+exit
+
+--- Gateway por defecto
+ip default-gateway 148.60.99.1
+
+--- Configurar Port-Channels
+interface Port-channel 3
+description EtherChannel to MLS0
+switchport mode trunk
+switchport trunk allowed vlan 65,66,67,68,99
+exit
+
+
+interface Port-channel 5
+description EtherChannel to MLS1
+switchport mode trunk
+switchport trunk allowed vlan 65,66,67,68,99
+exit
+
+interface Port-channel 7
+description EtherChannel to MLS4
+switchport mode trunk
+switchport trunk allowed vlan 65,66,67,68,99
+exit
+
+write
+
+----verificar
+do show vtp status
+do show vlan brief
+do show spanning-tree summary
+do show etherchannel summary
+do show interfaces trunk
+do show ip interface brief
