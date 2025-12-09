@@ -1,13 +1,10 @@
-SW-4
-
+! --- SW-4 ---
 
 enable
 configure terminal
 
 hostname SW-4
 no ip domain-lookup
-enable secret cisco123
-banner motd #Acceso Autorizado - SW-4 Region NW#
 
 ! --- VTP CLIENTE ---
 vtp mode client
@@ -16,7 +13,6 @@ vtp password juanmark123
 
 ! --- INTERFAZ DE ADMINISTRACIÓN ---
 interface vlan 9
- description Management VLAN
  ip address 148.60.9.6 255.255.255.0
  no shutdown
 exit
@@ -34,16 +30,8 @@ line vty 0 15
  login local
 exit
 
-line console 0
- password console123
- login
- logging synchronous
- exec-timeout 5 0
-exit
-
 ! --- TRUNK HACIA SW-3 ---
 interface fastEthernet 0/21
- description Trunk hacia SW-3
  switchport mode trunk
  switchport trunk native vlan 99
  switchport trunk allowed vlan 5,6,7,9
@@ -53,7 +41,6 @@ exit
 
 ! --- PUERTOS DE ACCESO VLAN 9 Gestion TI ---
 interface range fastEthernet 0/1-5
- description VLAN 9 - Gestion TI
  switchport mode access
  switchport access vlan 9
  switchport port-security
@@ -67,7 +54,6 @@ exit
 
 ! --- PUERTOS DE ACCESO VLAN 5 Marketing ---
 interface range fastEthernet 0/6-10
- description VLAN 5 - Marketing
  switchport mode access
  switchport access vlan 5
  switchport port-security
@@ -81,7 +67,6 @@ exit
 
 ! --- PUERTOS DE ACCESO VLAN 6 Ventas ---
 interface range fastEthernet 0/11-15
- description VLAN 6 - Ventas
  switchport mode access
  switchport access vlan 6
  switchport port-security
@@ -95,7 +80,6 @@ exit
 
 ! --- PUERTOS DE ACCESO VLAN 7 Compras ---
 interface range fastEthernet 0/16-20
- description VLAN 7 - Compras
  switchport mode access
  switchport access vlan 7
  switchport port-security
