@@ -1,0 +1,104 @@
+enable
+configure terminal
+hostname MultilayerSwitch0
+
+
+ip routing
+
+! Configurar VTP para propagar las VLANs hacia abajo
+vtp domain centro
+vtp version 2
+vtp mode server
+vtp password cisco
+
+! Crear las VLANs
+vlan 33
+ name Gestion_TI
+vlan 34
+ name Gestion_WLAN
+vlan 35
+ name Ventas_WLAN
+vlan 36
+ name Compras_Usuarios
+vlan 37
+ name Practicante
+exit
+
+! INTERFACES VIRTUALES Gateways y HELPER ADDRESS
+
+interface vlan 33
+ description Gateway_Gestion_TI
+ ip address 148.60.33.1 255.255.255.0
+ ip helper-address 148.60.1.1
+ no shutdown
+
+interface vlan 34
+ description Gateway_WLAN_Mgmt
+ ip address 148.60.34.1 255.255.255.0
+ ip helper-address 148.60.1.1
+ no shutdown
+
+interface vlan 35
+ description Gateway_Ventas
+ ip address 148.60.35.1 255.255.255.0
+ ip helper-address 148.60.1.1
+ no shutdown
+
+interface vlan 36
+ description Gateway_Compras
+ ip address 148.60.36.1 255.255.255.0
+ ip helper-address 148.60.1.1
+ no shutdown
+
+interface vlan 37
+ description Gateway_Practicante
+ ip address 148.60.37.1 255.255.255.0
+ ip helper-address 148.60.1.1
+ no shutdown
+
+! PUERTO ENRUTADO Hacia el Router CENTRO
+
+interface GigabitEthernet0/2
+ description Link_Hacia_Router_Centro
+ no switchport
+ ip address 148.60.1.2 255.255.255.252
+ ip dhcp snooping trust
+ no shutdown
+ exit
+
+! PUERTO TRONCAL (Hacia Switch1 - Abajo)
+interface FastEthernet0/4
+ description Link_Hacia_Switch1
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ no shutdown
+ exit
+
+! PUERTOS DE ACCESO (Dispositivos conectados directo al Multicapa)
+
+
+interface FastEthernet0/6
+ switchport mode access
+ switchport access vlan 36
+ spanning-tree portfast
+ no shutdown
+
+! Access Point LAP-PT (Centro) - Gestión de WLAN (VLAN 34)
+interface FastEthernet0/5
+ switchport mode access
+ switchport access vlan 34
+ no shutdown
+
+! Servidor RADIUS (Arriba) - Gestión TI (VLAN 33)
+interface FastEthernet0/3
+ switchport mode access
+ switchport access vlan 33
+ no shutdown
+
+! SEGURIDAD DHCP
+ip dhcp snooping
+ip dhcp snooping vlan 33,34,35,36,37
+no ip dhcp snooping information option
+
+end
+write
