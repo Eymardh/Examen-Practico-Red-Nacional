@@ -58,7 +58,7 @@ exit
 
 ! multiuser YumKaax nw
 interface Se0/3/0
-ip address 148.60.101.12 255.255.255.252
+ip address 148.60.101.14 255.255.255.252
 bandwidth 512
 no shutdown
 exit
