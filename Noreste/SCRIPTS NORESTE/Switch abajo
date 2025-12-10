@@ -4,9 +4,11 @@ hostname MLS_Dist_Abajo
 ip routing
 ipv6 unicast-routing
 no ip domain-lookup
+ip domain-name juanmark.com
 
-username admin secret JuanMark123
 crypto key generate rsa modulus 1024
+ip ssh version 2
+username admin secret JuanMark123
 line vty 0 4
  login local
  transport input ssh
@@ -15,12 +17,10 @@ exit
 vtp domain JuanMark
 vtp mode client
 
-! STP: Jefe de 99 y 100
 spanning-tree mode pvst
 spanning-tree vlan 99,100 root primary
 spanning-tree vlan 97,98 root secondary
 
-! Troncales
 interface range GigabitEthernet1/0/1 - 2
  switchport trunk encapsulation dot1q
  switchport mode trunk
@@ -29,7 +29,6 @@ interface range GigabitEthernet1/0/1 - 2
  no shutdown
 exit
 
-! Puerto Ruteado hacia Router
 interface GigabitEthernet1/0/3
  no switchport
  ip address 148.60.0.10 255.255.255.252
@@ -38,18 +37,17 @@ interface GigabitEthernet1/0/3
  no shutdown
 exit
 
-! DHCP IPv6 (Referencia)
 ipv6 dhcp pool IPV6_JUANMARK
  dns-server 2001:4860:4860::8888
  domain-name juanmark.com
 exit
 
-! HSRP (Invertido)
 interface vlan 97
  ip address 148.60.97.3 255.255.255.0
  ipv6 address 2006:AFEA:B0CA:97::3/64
  ipv6 nd managed-config-flag
  ipv6 dhcp server IPV6_JUANMARK
+ ipv6 rip JUANMARK enable
  standby version 2
  standby 1 ip 148.60.97.1
  standby 1 priority 100
@@ -62,6 +60,7 @@ interface vlan 98
  ipv6 address 2006:AFEA:B0CA:98::3/64
  ipv6 nd managed-config-flag
  ipv6 dhcp server IPV6_JUANMARK
+ ipv6 rip JUANMARK enable
  standby version 2
  standby 1 ip 148.60.98.1
  standby 1 priority 100
@@ -74,6 +73,7 @@ interface vlan 99
  ipv6 address 2006:AFEA:B0CA:99::3/64
  ipv6 nd managed-config-flag
  ipv6 dhcp server IPV6_JUANMARK
+ ipv6 rip JUANMARK enable
  standby version 2
  standby 1 ip 148.60.99.1
  standby 1 priority 150
@@ -86,6 +86,7 @@ interface vlan 100
  ipv6 address 2006:AFEA:B0CA:100::3/64
  ipv6 nd managed-config-flag
  ipv6 dhcp server IPV6_JUANMARK
+ ipv6 rip JUANMARK enable
  standby version 2
  standby 1 ip 148.60.100.1
  standby 1 priority 150
@@ -93,7 +94,6 @@ interface vlan 100
  no shutdown
 exit
 
-! Ruteo
 router rip
  version 2
  network 148.60.0.0
@@ -101,6 +101,7 @@ router rip
  no auto-summary
  redistribute connected metric 1
 exit
+
 ipv6 router rip JUANMARK
 exit
 do write

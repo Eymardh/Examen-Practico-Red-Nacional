@@ -4,15 +4,16 @@ hostname MLS_Dist_Arriba
 ip routing
 ipv6 unicast-routing
 no ip domain-lookup
+ip domain-name juanmark.com
 
-username admin secret JuanMark123
 crypto key generate rsa modulus 1024
+ip ssh version 2
+username admin secret JuanMark123
 line vty 0 4
  login local
  transport input ssh
 exit
 
-! VLANs y VTP
 vtp domain JuanMark
 vtp mode server
 vlan 97
@@ -25,12 +26,10 @@ vlan 100
  name Servicios
 exit
 
-! STP: Jefe de 97 y 98
 spanning-tree mode pvst
 spanning-tree vlan 97,98 root primary
 spanning-tree vlan 99,100 root secondary
 
-! Troncales
 interface range GigabitEthernet1/0/1 - 2
  switchport trunk encapsulation dot1q
  switchport mode trunk
@@ -39,7 +38,6 @@ interface range GigabitEthernet1/0/1 - 2
  no shutdown
 exit
 
-! Puerto Ruteado hacia Router
 interface GigabitEthernet1/0/3
  no switchport
  ip address 148.60.0.2 255.255.255.252
@@ -48,7 +46,6 @@ interface GigabitEthernet1/0/3
  no shutdown
 exit
 
-! DHCP IPv4 Pools
 ip dhcp excluded-address 148.60.97.1 148.60.97.10
 ip dhcp excluded-address 148.60.98.1 148.60.98.10
 ip dhcp excluded-address 148.60.99.1 148.60.99.10
@@ -57,32 +54,27 @@ ip dhcp excluded-address 148.60.100.1 148.60.100.10
 ip dhcp pool VLAN97
  network 148.60.97.0 255.255.255.0
  default-router 148.60.97.1
- dns-server 8.8.8.8
 ip dhcp pool VLAN98
  network 148.60.98.0 255.255.255.0
  default-router 148.60.98.1
- dns-server 8.8.8.8
 ip dhcp pool VLAN99
  network 148.60.99.0 255.255.255.0
  default-router 148.60.99.1
- dns-server 8.8.8.8
 ip dhcp pool VLAN100
  network 148.60.100.0 255.255.255.0
  default-router 148.60.100.1
- dns-server 8.8.8.8
 
-! DHCP IPv6 Pool
 ipv6 dhcp pool IPV6_JUANMARK
  dns-server 2001:4860:4860::8888
  domain-name juanmark.com
 exit
 
-! HSRP y Gateways (SVI)
 interface vlan 97
  ip address 148.60.97.2 255.255.255.0
  ipv6 address 2006:AFEA:B0CA:97::2/64
  ipv6 nd managed-config-flag
  ipv6 dhcp server IPV6_JUANMARK
+ ipv6 rip JUANMARK enable
  standby version 2
  standby 1 ip 148.60.97.1
  standby 1 priority 150
@@ -95,6 +87,7 @@ interface vlan 98
  ipv6 address 2006:AFEA:B0CA:98::2/64
  ipv6 nd managed-config-flag
  ipv6 dhcp server IPV6_JUANMARK
+ ipv6 rip JUANMARK enable
  standby version 2
  standby 1 ip 148.60.98.1
  standby 1 priority 150
@@ -107,6 +100,7 @@ interface vlan 99
  ipv6 address 2006:AFEA:B0CA:99::2/64
  ipv6 nd managed-config-flag
  ipv6 dhcp server IPV6_JUANMARK
+ ipv6 rip JUANMARK enable
  standby version 2
  standby 1 ip 148.60.99.1
  standby 1 priority 100
@@ -119,6 +113,7 @@ interface vlan 100
  ipv6 address 2006:AFEA:B0CA:100::2/64
  ipv6 nd managed-config-flag
  ipv6 dhcp server IPV6_JUANMARK
+ ipv6 rip JUANMARK enable
  standby version 2
  standby 1 ip 148.60.100.1
  standby 1 priority 100
@@ -126,14 +121,13 @@ interface vlan 100
  no shutdown
 exit
 
-! Ruteo
 router rip
  version 2
  network 148.60.0.0
  no passive-interface GigabitEthernet1/0/3
  no auto-summary
- redistribute connected metric 1
 exit
+
 ipv6 router rip JUANMARK
 exit
 do write
