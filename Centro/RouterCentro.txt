@@ -1,0 +1,87 @@
+enable
+configure terminal
+hostname Centro
+!
+Seguridad y SSH ---
+service password-encryption
+enable secret admin123
+username admin secret admin123
+ip domain-name JuanMark.com
+line vty 0 15
+ transport input ssh
+ login local
+
+!Interfaces
+! WAN 
+interface Serial0/2/1
+ description WAN_Hacia_Multiuser
+ ip address 148.60.101.2 255.255.255.0
+ no shutdown
+ interface Serial0/2/0
+ description WAN_Hacia_Multiuser
+ ip address 148.60.101.6 255.255.255.0
+ interface Serial0/3/0
+ description WAN_Hacia_Multiuser
+ ip address 148.60.101.10 255.255.255.0
+ no shutdown
+ no shutdown
+!
+! LAN 
+interface GigabitEthernet0/0
+ description Link_a_MSW_PRINCIPAL
+ ip address 148.60.1.1 255.255.255.0
+ no shutdown
+!
+! DHCPv4 
+no ip dhcp conflict logging
+ip dhcp excluded-address 148.60.33.1 148.60.33.10
+ip dhcp excluded-address 148.60.34.1 148.60.34.10
+ip dhcp excluded-address 148.60.35.1 148.60.35.10
+ip dhcp excluded-address 148.60.37.1 148.60.37.10
+
+!pool para vlan gestioTI
+ip dhcp pool VLAN33_TI
+ network 148.60.33.0 255.255.255.0
+ default-router 148.60.33.1
+ dns-server 8.8.8.8
+ 
+ !pool para vlan gestiowlan
+ ip dhcp pool VLAN34_WLAN_
+ network 148.60.34.0 255.255.255.0
+ default-router 148.60.34.1
+ dns-server 8.8.8.8
+ 
+ip dhcp pool VLAN35_VENTAS
+ network 148.60.35.0 255.255.255.0
+ default-router 148.60.35.1
+ dns-server 8.8.8.8
+ 
+ ip dhcp pool VLAN36_COMPRAS
+ network 148.60.36.0 255.255.255.0
+ default-router 148.60.36.1
+ dns-server 8.8.8.8
+
+ip dhcp pool VLAN_37_PRACTICANTES
+ network 148.60.37.0 255.255.255.0
+ default-router 148.60.37.1
+ dns-server 8.8.8.8
+
+!DHCPv6
+ipv6 unicast-routing
+ipv6 dhcp pool POOL_VLAN33
+ dns-server 2001:4860:4860::8888
+ domain-name JuanMark.com
+
+!Enrutamiento
+! ruta esttica de salida (
+ip route 0.0.0.0 0.0.0.0 148.60.101.1
+
+router rip
+ version 2
+ network 148.60.1.0      
+ network 148.60.101.0    
+ default-information originate 
+ no auto-summary
+ passive-interface GigabitEthernet0/0
+
+end
