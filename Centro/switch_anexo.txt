@@ -1,25 +1,28 @@
 enable
 configure terminal
-hostname Switch1
+hostname Switch0_Anexo
 
 ! SEGURIDAD Y SSH
 service password-encryption
 enable secret admin123
 username admin secret admin123
-ip domain-name JuanMark.com
+ip domain-name empresa.com
 line vty 0 15
  transport input ssh
  login local
+! NOTA: Recuerda ejecutar "crypto key generate rsa" al final
 
 ! VTP CLIENTE
+! Debe ser cliente para recibir las VLANs del MSW_Anexo
 vtp domain centro
 vtp mode client
 vtp version 2
 vtp password cisco
 
-! ENLACE TRONCAL
-interface FastEthernet0/4
- description Link_Hacia_MSP
+! troncal
+! Conecta al puerto Fa0/1 del Multicapa Anexo
+interface FastEthernet0/1
+ description Uplink_Hacia_MSW_Anexo
  switchport mode trunk
  switchport nonegotiate
  ip dhcp snooping trust
@@ -27,35 +30,24 @@ interface FastEthernet0/4
  no shutdown
  exit
 
-! PUERTO ACCESS POINT
+! access point
+! Configuración para el AP del Anexo (Trunk Nativo VLAN 34)
 interface FastEthernet0/5
- description Access_Point_Principal
+ description AP_Anexo
  switchport mode trunk
  switchport trunk native vlan 34
  switchport trunk allowed vlan 34,35,37
  switchport nonegotiate
+ ! Confiamos en el AP
  ip dhcp snooping trust
  no shutdown
  exit
 
-! PUERTO STAFF IT
-interface FastEthernet0/2
- description PC_Staff_IT
- switchport mode access
- switchport access vlan 33
- spanning-tree portfast
- switchport port-security
- switchport port-security maximum 2
- switchport port-security violation restrict
- switchport port-security mac-address sticky
- no shutdown
- exit
-
-! PUERTOS DE USUARIOS COMPRAS
+! puertos de usuarios
 interface range FastEthernet0/6 - 24
- description Usuarios_Compras
+ description Usuarios_Anexo
  switchport mode access
- switchport access vlan 36
+ switchport access vlan 37
  spanning-tree portfast
  switchport port-security
  switchport port-security maximum 2
@@ -69,10 +61,10 @@ ip dhcp snooping
 ip dhcp snooping vlan 33,34,35,36,37
 no ip dhcp snooping information option
 
-! GESTION DEL SWITCH (SVI)
+! gestion del switch
 interface vlan 33
- description Gestion_Switch1
- ip address 148.60.33.10 255.255.255.0
+ description Gestion_SW_Anexo
+ ip address 148.60.33.11 255.255.255.0
  no shutdown
  exit
 

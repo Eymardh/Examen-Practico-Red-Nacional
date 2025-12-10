@@ -1,17 +1,25 @@
 enable
 configure terminal
-hostname MultilayerSwitch0
+hostname MSP
 
+! SEGURIDAD DE ACCESO Y SSH 
+service password-encryption
+enable secret admin123
+username admin secret admin123
+ip domain-name empresa.com
+line vty 0 15
+ transport input ssh
+ login local
 
 ip routing
+ipv6 unicast-routing
 
-! Configurar VTP para propagar las VLANs hacia abajo
+! VLANs y VTP 
 vtp domain centro
 vtp version 2
 vtp mode server
 vtp password cisco
 
-! Crear las VLANs
 vlan 33
  name Gestion_TI
 vlan 34
@@ -24,28 +32,29 @@ vlan 37
  name Practicante
 exit
 
-! INTERFACES VIRTUALES Gateways y HELPER ADDRESS
+! OPTIMIZACOIN STP
+spanning-tree mode rapid-pvst
+spanning-tree vlan 33,35,36 root primary
+spanning-tree vlan 34,37 root secondary
 
+! INTERFACES VIRTUALES
 interface vlan 33
- description Gateway_Gestion_TI
  ip address 148.60.33.1 255.255.255.0
+ ipv6 address 2001:DB8:ACAD:33::1/64
  ip helper-address 148.60.1.1
  no shutdown
 
 interface vlan 34
- description Gateway_WLAN_Mgmt
  ip address 148.60.34.1 255.255.255.0
  ip helper-address 148.60.1.1
  no shutdown
 
 interface vlan 35
- description Gateway_Ventas
  ip address 148.60.35.1 255.255.255.0
  ip helper-address 148.60.1.1
  no shutdown
 
 interface vlan 36
- description Gateway_Compras
  ip address 148.60.36.1 255.255.255.0
  ip helper-address 148.60.1.1
  no shutdown
@@ -56,49 +65,98 @@ interface vlan 37
  ip helper-address 148.60.1.1
  no shutdown
 
-! PUERTO ENRUTADO Hacia el Router CENTRO
+! ETHERCHANNEL
+! puertos 1 y 2 para el enlace
+interface range fastEthernet0/1 - 2
+ description EtherChannel_Hacia_Anexo
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport nonegotiate
+ channel-group 1 mode desirable
+ no shutdown
+ exit
 
+interface Port-channel 1
+ description Po1_Hacia_Anexo
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport nonegotiate
+ no shutdown
+ exit
+
+! PUERTO ENRUTADO (Hacia Router CENTRO)
 interface GigabitEthernet0/2
  description Link_Hacia_Router_Centro
  no switchport
  ip address 148.60.1.2 255.255.255.252
- ip dhcp snooping trust
  no shutdown
  exit
 
-! PUERTO TRONCAL (Hacia Switch1 - Abajo)
+! puerto troncal gacia Switch Acceso - Abajo
 interface FastEthernet0/4
- description Link_Hacia_Switch1
+ description Link_Hacia_Switch_Acceso
  switchport trunk encapsulation dot1q
  switchport mode trunk
+ switchport nonegotiate
+ ip dhcp snooping trust
+ ip arp inspection trust
  no shutdown
  exit
 
-! PUERTOS DE ACCESO (Dispositivos conectados directo al Multicapa)
+! PUERTO ACCESS POINT
+interface FastEthernet0/5
+ description AP_Centro
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk native vlan 34
+ switchport trunk allowed vlan 34,35,37
+ switchport nonegotiate
+ ip dhcp snooping trust
+ ip arp inspection trust
+ no shutdown
+ exit
 
+! PUERTOS DE ACCESO
+! Servidor RADIUS (VLAN 33)
+interface FastEthernet0/3
+ description SRV_RADIUS
+ switchport mode access
+ switchport access vlan 33
+ spanning-tree portfast
+ switchport port-security
+ switchport port-security maximum 2
+ switchport port-security mac-address sticky
+ switchport port-security violation restrict
+ no shutdown
 
+! Usuario Compras (VLAN 36)
 interface FastEthernet0/6
+ description PC_Compras
  switchport mode access
  switchport access vlan 36
  spanning-tree portfast
+ switchport port-security
+ switchport port-security maximum 2
+ switchport port-security mac-address sticky
+ switchport port-security violation restrict
  no shutdown
 
-! Access Point LAP-PT (Centro) - Gestión de WLAN (VLAN 34)
-interface FastEthernet0/5
- switchport mode access
- switchport access vlan 34
- no shutdown
+! ENRUTAMIENTO RIPv2 
+router rip
+ version 2
+ network 148.60.0.0
+ no auto-summary
+ passive-interface Vlan 33
+ passive-interface Vlan 34
+ passive-interface Vlan 35
+ passive-interface Vlan 36
+ passive-interface Vlan 37
+ exit
 
-! Servidor RADIUS (Arriba) - Gestión TI (VLAN 33)
-interface FastEthernet0/3
- switchport mode access
- switchport access vlan 33
- no shutdown
-
-! SEGURIDAD DHCP
+! seguridad Snooping y DAI
 ip dhcp snooping
 ip dhcp snooping vlan 33,34,35,36,37
 no ip dhcp snooping information option
-
+ip arp inspection vlan 33,34,35,36,37
+ip route 0.0.0.0 0.0.0.0 148.60.1.1
 end
-write

@@ -1,0 +1,98 @@
+enable
+configure terminal
+hostname MSW_Anexo
+
+! SEGURIDAD Y SSH 
+service password-encryption
+enable secret admin123
+username admin secret admin123
+ip domain-name JuanMark.com
+line vty 0 15
+ transport input ssh
+ login local
+
+! VTP CLIENTE
+vtp domain centro
+vtp mode client
+vtp version 2
+vtp password cisco
+
+! OPTIMIZACION STP
+spanning-tree mode rapid-pvst
+spanning-tree vlan 34,37 root primary
+spanning-tree vlan 33,35,36 root secondary
+
+! ETHERCHANNEL HACIA CENTRAL (Backbone) ---
+interface range FastEthernet0/2 - 3
+ description Uplink_Hacia_Central_Po1
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport nonegotiate
+ channel-group 1 mode desirable
+ no shutdown
+ exit
+
+interface Port-channel 1
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport nonegotiate
+ ip dhcp snooping trust
+ ip arp inspection trust
+ no shutdown
+ exit
+
+! PUERTO HACIA SWITCH NORMAL DEL ANEXO
+interface FastEthernet0/1
+ description Bajada_A_Switch_Anexo
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport nonegotiate
+ ip dhcp snooping trust
+ ip arp inspection trust
+ no shutdown
+ exit
+
+! PUERTO WLC 
+interface FastEthernet0/6
+ description WLC_Connection
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk native vlan 34
+ switchport trunk allowed vlan 34,35,37
+ switchport nonegotiate
+ ip dhcp snooping trust
+ ip arp inspection trust
+ no shutdown
+ exit
+
+! PUERTO PC ADMIN
+interface FastEthernet0/5
+ description PC_Admin_Anexo
+ switchport mode access
+ switchport access vlan 33
+ spanning-tree portfast
+ switchport port-security
+ switchport port-security maximum 2
+ switchport port-security mac-address sticky
+ switchport port-security violation restrict
+ no shutdown
+ exit
+
+! seguridad
+ip dhcp snooping
+ip dhcp snooping vlan 33,34,35,36,37
+no ip dhcp snooping information option
+!
+ip arp inspection vlan 33,34,35,36,37
+
+! gestion
+interface vlan 33
+ description Gestion_Switch_Anexo
+ ip address 148.60.33.2 255.255.255.0
+ no shutdown
+ exit
+
+ip default-gateway 148.60.33.1
+
+end
+write memory
