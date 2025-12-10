@@ -1,142 +1,80 @@
-Router Itzamna - Sureste
-
-
 enable
 configure terminal
 hostname YumKaax
-ip domain-name juanmark.com
 no ip domain-lookup
+ip domain-name juanmark.com
 
-
-service password-encryption
-enable secret Cisco123!
+! ssh
 username admin secret Admin123!
-
-crypto key generate rsa general-keys modulus 2048
-
+crypto key generate rsa 
+2048
 line vty 0 15
 login local
 transport input ssh
 exit
+ip ssh version 2
 
-line console 0
-login local
-exit
-
+! trunk hacia BALLENA
 interface GigabitEthernet0/0
-description Trunk a MLS1 - Inter-VLAN
 no shutdown
 exit
 
---- Sub-interfaz VLAN 65 - Ventas
+
 interface GigabitEthernet0/0.65
-description VLAN 65 - Ventas
 encapsulation dot1Q 65
-ip address 148.60.65.3 255.255.255.224
+ip address 148.60.65.3 255.255.255.0
 standby 65 ip 148.60.65.1
 standby 65 priority 100
 standby 65 preempt
+no shutdown
 exit
 
---- Sub-interfaz VLAN 66 - Gestion TI
 interface GigabitEthernet0/0.66
-description VLAN 66 - Gestion TI
 encapsulation dot1Q 66
-ip address 148.60.66.3 255.255.255.224
+ip address 148.60.66.3 255.255.255.0
 standby 66 ip 148.60.66.1
-standby 66 priority 110
+standby 66 priority 100
 standby 66 preempt
+no shutdown
 exit
 
---- Sub-interfaz VLAN 67 - Compras
 interface GigabitEthernet0/0.67
-description VLAN 67 - Compras
 encapsulation dot1Q 67
-ip address 148.60.67.3 255.255.255.224
+ip address 148.60.67.3 255.255.255.0
 standby 67 ip 148.60.67.1
-standby 67 priority 100
+standby 67 priority 110
 standby 67 preempt
+no shutdown
 exit
 
--- Sub-interfaz VLAN 68 - MKT
 interface GigabitEthernet0/0.68
-description VLAN 68 - MKT
 encapsulation dot1Q 68
-ip address 148.60.68.3 255.255.255.224
+ip address 148.60.68.3 255.255.255.0
 standby 68 ip 148.60.68.1
+standby 68 priority 110
+standby 68 preempt
+no shutdown
 exit
 
---- Enlace WAN a Noreste (512 Kbps)
-interface GigabitEthernet0/1
-ip address 148.60.254.9 255.255.255.252
+! multiuser YumKaax nw
+interface Se0/3/0
+ip address 148.60.101.12 255.255.255.252
 bandwidth 512
 no shutdown
 exit
 
---- Enlace P2P a Itzamna
+! YumKaax a Itzamna
 interface GigabitEthernet0/2
-ip address 148.60.254.2 255.255.255.252
+ip address 148.60.80.10 255.255.255.252
 no shutdown
 exit
 
---- Configuración DHCP
-ip dhcp excluded-address 148.60.65.1 148.60.65.5
-ip dhcp excluded-address 148.60.66.1 148.60.66.5
-ip dhcp excluded-address 148.60.67.1 148.60.67.5
-ip dhcp excluded-address 148.60.68.1 148.60.68.5
-
---- Pool DHCP VLAN 65 - Ventas
-ip dhcp pool VLAN65_VENTAS
-network 148.60.65.0 255.255.255.224
-default-router 148.60.65.1
-dns-server 8.8.8.8
-domain-name juanmark.com
-exit
-
--- Pool DHCP VLAN 66 - Gestion TI
-ip dhcp pool VLAN66_TI
-network 148.60.66.0 255.255.255.224
-default-router 148.60.66.1
-dns-server 8.8.8.8
-domain-name juanmark.com
-exit
-
--- Pool DHCP VLAN 67 - Compras
-ip dhcp pool VLAN67_COMPRAS
-network 148.60.67.0 255.255.255.224
-default-router 148.60.67.1
-dns-server 8.8.8.8
-domain-name juanmark.com
-exit
-
---- Pool DHCP VLAN 68 - MKT
-ip dhcp pool VLAN68_MKT
-network 148.60.68.0 255.255.255.224
-default-router 148.60.68.1
-dns-server 8.8.8.8
-domain-name juanmark.com
-exit
-
--- Configuración RIP
+! rip
 router rip
 version 2
 no auto-summary
 network 148.60.0.0
-passive-interface GigabitEthernet0/0.65
-passive-interface GigabitEthernet0/0.66
-passive-interface GigabitEthernet0/0.67
-passive-interface GigabitEthernet0/0.68
-passive-interface GigabitEthernet0/0.99
 exit
 
-write memory
-
-----Verificar
-show ip interface brief
-show standby brief
-show ip dhcp binding
-show ip route
-show ip protocols
-show crypto key mypubkey rsa
-
-
+end
+copy running startup 

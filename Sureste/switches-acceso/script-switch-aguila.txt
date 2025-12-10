@@ -1,0 +1,70 @@
+enable
+configure terminal
+hostname aguila
+no ip domain-lookup
+ip domain-name juanmark.com
+
+! ssh
+username admin secret Admin123!
+crypto key generate rsa 
+2048
+ip ssh version 2
+line vty 0 15
+login local
+transport input ssh
+exit
+
+! VTP client
+vtp mode client
+vtp domain JUANMARK
+vtp version 2
+
+! STP
+
+spanning-tree mode rapid-pvst
+
+! trunk a caballo
+interface GigabitEthernet0/1
+switchport mode trunk
+switchport trunk allowed vlan 65,66,67,68,69
+switchport nonegotiate
+no shutdown
+exit
+
+! trunk a delfin
+interface GigabitEthernet0/2
+switchport mode trunk
+switchport trunk allowed vlan 65,66,67,68,69
+switchport nonegotiate
+no shutdown
+exit
+
+! PC0 VLAN 65 VENTAS
+interface FastEthernet0/1
+switchport mode access
+switchport access vlan 65
+spanning-tree portfast
+no shutdown
+exit
+
+! PC1 VLAN 67 Compras
+
+interface FastEthernet0/2
+switchport mode access
+switchport access vlan 67
+spanning-tree portfast
+no shutdown
+exit
+
+!  PC2 VLAN 66 TI
+interface FastEthernet0/3
+switchport mode access
+switchport access vlan 66
+spanning-tree portfast
+no shutdown
+exit
+
+
+end
+copy running-config startup-config
+

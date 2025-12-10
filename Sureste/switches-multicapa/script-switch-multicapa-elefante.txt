@@ -1,0 +1,101 @@
+enable
+configure terminal
+hostname elefante
+no ip domain-lookup
+ip domain-name juanmark.com
+
+! ssh
+username admin secret Admin123!
+crypto key generate rsa 
+2048
+ip ssh version 2
+line vty 0 15
+login local
+transport input ssh
+exit
+
+! routing
+ip routing
+
+! VTP client
+vtp mode client
+vtp domain JUANMARK
+vtp version 2
+
+! SVIs
+interface Vlan65
+ip address 148.60.65.7 255.255.255.0
+no shutdown
+exit
+interface Vlan66
+ip address 148.60.66.7 255.255.255.0
+no shutdown
+exit
+interface Vlan67
+ip address 148.60.67.7 255.255.255.0
+no shutdown
+exit
+interface Vlan68
+ip address 148.60.68.7 255.255.255.0
+no shutdown
+exit
+
+! STP
+spanning-tree mode rapid-pvst
+
+! elefante a foca
+interface range GigabitEthernet1/0/14-15
+switchport mode trunk
+switchport nonegotiate
+switchport trunk allowed vlan 65,66,67,68
+channel-group 1 mode desirable
+no shutdown
+exit
+
+interface Port-channel1
+switchport mode trunk
+switchport nonegotiate
+switchport trunk allowed vlan 65,66,67,68
+no shutdown
+exit
+
+! trunk elefante a abeja
+interface GigabitEthernet1/0/9
+switchport mode trunk
+switchport nonegotiate
+switchport trunk allowed vlan 65,66,67,68
+no shutdown
+exit
+
+! trunk elefante a ballena
+interface GigabitEthernet1/0/11
+switchport mode trunk
+switchport nonegotiate
+switchport trunk allowed vlan 65,66,67,68
+no shutdown
+exit
+
+! trunk elefante a canario
+interface GigabitEthernet1/0/20
+switchport mode trunk
+switchport nonegotiate
+switchport trunk allowed vlan 65,66,67,68
+no shutdown
+exit
+
+! trunk elefante a halcon
+interface GigabitEthernet1/0/21
+switchport mode trunk
+switchport nonegotiate
+switchport trunk allowed vlan 65,66,67,68
+no shutdown
+exit
+
+router rip
+version 2
+no auto-summary
+network 148.60.0.0
+exit
+
+end
+copy running-config startup-config

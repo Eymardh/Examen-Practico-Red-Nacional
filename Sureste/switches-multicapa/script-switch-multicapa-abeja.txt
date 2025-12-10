@@ -1,0 +1,172 @@
+enable
+configure terminal
+hostname abeja
+no ip domain-lookup
+ip domain-name juanmark.com
+
+! ssh
+username admin secret Admin123!
+crypto key generate rsa 
+2048
+ip ssh version 2
+line vty 0 15
+login local
+transport input ssh
+exit
+
+! routing
+ip routing
+
+! VTP Server
+
+vtp mode server
+vtp domain JUANMARK
+vtp version 2
+
+
+!-----------dhcp
+! DHCP - pools por vlan 
+ip dhcp excluded-address 148.60.65.1 148.60.65.9
+ip dhcp excluded-address 148.60.66.1 148.60.66.9
+ip dhcp excluded-address 148.60.67.1 148.60.67.9
+ip dhcp excluded-address 148.60.68.1 148.60.68.9
+
+ip dhcp pool VLAN65_VENTAS
+network 148.60.65.0 255.255.255.0
+default-router 148.60.65.1
+exit
+
+ip dhcp pool VLAN66_TI
+network 148.60.66.0 255.255.255.0
+default-router 148.60.66.1
+exit
+
+ip dhcp pool VLAN67_COMPRAS
+network 148.60.67.0 255.255.255.0
+default-router 148.60.67.1
+exit
+
+ip dhcp pool VLAN68_MKT
+network 148.60.68.0 255.255.255.0
+default-router 148.60.68.1
+exit
+
+!---------dhcp 
+
+! VLANs
+vlan 65
+ name VENTAS
+exit
+vlan 66
+ name TI
+exit
+vlan 67
+ name COMPRAS
+exit
+vlan 68
+ name MKT
+exit
+vlan 69
+ name WLC-MGMT
+exit
+
+--asignar ip a vlans
+
+interface vlan65 
+ip address 148.60.65.3 255.255.255.0
+no shutdown
+exit
+interface vlan66 
+ip address 148.60.66.3 255.255.255.0
+no shutdown
+exit
+interface vlan67 
+ip address 148.60.67.3 255.255.255.0
+no shutdown
+exit
+interface vlan68 
+ip address 148.60.68.3 255.255.255.0
+no shutdown
+exit
+
+
+! STP 
+spanning-tree mode pvst
+spanning-tree vlan 65 root primary
+spanning-tree vlan 66 root primary
+spanning-tree vlan 67 root primary
+spanning-tree vlan 68 root primary
+
+! ABEJA a CABALLO 
+interface range GigabitEthernet1/0/2-3
+switchport mode trunk
+switchport trunk allowed vlan 65,66,67,68
+switchport nonegotiate
+channel-group 1 mode desirable
+no shutdown
+exit
+
+interface Port-channel1
+switchport mode trunk
+switchport trunk allowed vlan 65,66,67,68
+switchport nonegotiate
+no shutdown
+exit
+
+-----------------
+! ABEJA a FOCA
+interface range GigabitEthernet1/0/4-5
+switchport mode trunk
+switchport trunk allowed vlan 65,66,67,68
+switchport nonegotiate
+channel-group 2 mode desirable
+no shutdown
+exit
+
+interface Port-channel2
+switchport mode trunk
+switchport trunk allowed vlan 65,66,67,68
+switchport nonegotiate
+no shutdown
+exit
+
+! ABEJA a BALLENA
+interface range GigabitEthernet1/0/6-7
+switchport mode trunk
+switchport trunk allowed vlan 65,66,67,68
+switchport nonegotiate
+channel-group 3 mode desirable
+no shutdown
+exit
+
+interface Port-channel3
+switchport mode trunk
+switchport trunk allowed vlan 65,66,67,68
+switchport nonegotiate
+no shutdown
+exit
+
+! troncal a delfin
+interface GigabitEthernet1/0/8
+switchport mode trunk
+switchport trunk allowed vlan 65,66,67,68
+switchport nonegotiate
+no shutdown
+exit
+
+! troncal a elefante
+interface GigabitEthernet1/0/9
+switchport mode trunk
+switchport trunk allowed vlan 65,66,67,68
+switchport nonegotiate
+no shutdown
+exit
+
+router rip
+version 2
+no auto-summary
+network 148.60.0.0
+exit
+
+end
+copy running startup 

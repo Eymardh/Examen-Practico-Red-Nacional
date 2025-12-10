@@ -1,0 +1,68 @@
+enable
+configure terminal
+hostname garza
+no ip domain-lookup
+ip domain-name juanmark.com
+
+! ssh
+username admin secret Admin123!
+crypto key generate rsa 
+2048
+ip ssh version 2
+line vty 0 15
+login local
+transport input ssh
+exit
+
+! VTP client
+vtp mode client
+vtp domain JUANMARK
+vtp version 2
+
+! STP
+
+spanning-tree mode rapid-pvst
+
+! garza a caballo
+interface GigabitEthernet0/1
+switchport mode trunk
+switchport trunk allowed vlan 65,66,67,68
+switchport nonegotiate
+no shutdown
+exit
+
+! garza a delfin
+interface GigabitEthernet0/2
+switchport mode trunk
+switchport trunk allowed vlan 65,66,67,68
+switchport nonegotiate
+no shutdown
+exit
+
+
+! PC3  VLAN 65
+interface FastEthernet0/1
+switchport mode access
+switchport access vlan 65
+spanning-tree portfast
+no shutdown
+exit
+
+! PC4 VLAN 67
+interface FastEthernet0/2
+switchport mode access
+switchport access vlan 67
+spanning-tree portfast
+no shutdown
+exit
+
+! PC5  VLAN 68
+interface FastEthernet0/3
+switchport mode access
+switchport access vlan 68
+spanning-tree portfast
+no shutdown
+exit
+
+end
+copy running-config startup-config

@@ -1,0 +1,130 @@
+enable
+configure terminal
+hostname ballena
+no ip domain-lookup
+ip domain-name juanmark.com
+
+! ssh
+username admin secret Admin123!
+crypto key generate rsa 
+2048
+ip ssh version 2
+line vty 0 15
+login local
+transport input ssh
+exit
+
+! routing
+ip routing
+
+! VTP client
+vtp mode client
+vtp domain JUANMARK
+vtp version 2
+
+! -SVIs
+interface Vlan65
+ip address 148.60.65.4 255.255.255.0
+no shutdown
+exit
+
+interface Vlan66
+ip address 148.60.66.4 255.255.255.0
+no shutdown
+exit
+
+interface Vlan67
+ip address 148.60.67.4 255.255.255.0
+no shutdown
+exit
+
+interface Vlan68
+ip address 148.60.68.4 255.255.255.0
+no shutdown
+exit
+
+! trunk a YumKaax
+interface GigabitEthernet1/0/1
+switchport mode trunk
+switchport trunk allowed vlan 65,66,67,68
+switchport nonegotiate
+no shutdown
+exit
+
+! ballena a abeja
+interface range GigabitEthernet1/0/6-7
+switchport mode trunk
+switchport trunk allowed vlan 65,66,67,68
+switchport nonegotiate
+channel-group 1 mode desirable
+no shutdown
+exit
+
+interface Port-channel1
+switchport mode trunk
+switchport trunk allowed vlan 65,66,67,68
+no shutdown
+exit
+!-------------------------------------
+
+! ballena a caballo
+interface range GigabitEthernet1/0/4-5
+switchport mode trunk
+switchport trunk allowed vlan 65,66,67,68
+switchport nonegotiate
+channel-group 2 mode desirable
+no shutdown
+exit
+
+interface Port-channel2
+switchport mode trunk
+switchport trunk allowed vlan 65,66,67,68
+no shutdown
+exit
+
+! ballena a foca
+interface range GigabitEthernet1/0/2-3
+switchport mode trunk
+switchport trunk allowed vlan 65,66,67,68
+switchport nonegotiate
+channel-group 3 mode desirable
+no shutdown
+exit
+
+interface Port-channel3
+switchport mode trunk
+switchport trunk allowed vlan 65,66,67,68
+no shutdown
+exit
+
+! truncal a delfin
+interface GigabitEthernet1/0/10
+switchport mode trunk
+switchport trunk allowed vlan 65,66,67,68
+switchport nonegotiate
+no shutdown
+exit
+
+! truncal a elefante
+interface GigabitEthernet1/0/11
+switchport mode trunk
+switchport trunk allowed vlan 65,66,67,68
+switchport nonegotiate
+no shutdown
+exit
+
+router rip
+version 2
+no auto-summary
+network 148.60.0.0
+exit
+
+! pvst
+spanning-tree mode rapid-pvst
+spanning-tree vlan 65 root primary
+spanning-tree vlan 66 root primary
+spanning-tree vlan 67 root primary
+spanning-tree vlan 68 root primary
+
+end
+copy running startup 
